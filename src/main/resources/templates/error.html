@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Error - Student Attendance System</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <style>
+        .error-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0 20px;
+        }
+        .error-code {
+            font-size: 120px;
+            font-weight: bold;
+            color: #dc3545;
+            margin-bottom: 0;
+            line-height: 1;
+        }
+        .error-message {
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+        .error-details {
+            margin-bottom: 30px;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-icon mb-4">
+            <i class="bi bi-exclamation-triangle text-danger" style="font-size: 4rem;"></i>
+        </div>
+        <h1 class="error-code" th:text="${status}">404</h1>
+        <h2 class="error-message" th:text="${error}">Error</h2>
+        
+        <div th:switch="${status}" class="error-details">
+            <div th:case="404">The page you are looking for does not exist.</div>
+            <div th:case="403">You don't have permission to access this resource.</div>
+            <div th:case="500">Something went wrong on our server. Please try again later.</div>
+            <div th:case="*">
+                <span th:text="${message}">An unexpected error occurred.</span>
+            </div>
+        </div>
+        
+        <a href="/" class="btn btn-primary btn-lg">
+            <i class="bi bi-house-door me-2"></i>Return to Home
+        </a>
+        
+        <p class="mt-5 text-muted">&copy; 2025 Student Attendance System</p>
+    </div>
+    
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
+

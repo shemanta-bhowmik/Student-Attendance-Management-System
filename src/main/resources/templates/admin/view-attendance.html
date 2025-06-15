@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en" 
+      xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>View Attendance - Student Attendance System</title>
+</head>
+<body>
+    <div th:replace="~{layout/main :: layout(~{::section})}" th:with="title='View Attendance'">
+        <section>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">
+                    <i class="bi bi-eye"></i> View Attendance
+                </h2>
+                <div class="text-end">
+                    <a th:href="@{/admin/attendance/mark}" class="btn btn-primary">
+                        <i class="bi bi-plus-circle"></i> Mark Attendance
+                    </a>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Present Today</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" 
+                                         th:text="${presentStudents + ' / ' + totalStudents}">
+                                        0/0
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-person-check fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Attendance Rate</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" 
+                                         th:text="${#numbers.formatDecimal(attendanceRate, 1, 1) + '%'}">
+                                        0%
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-graph-up fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Total Students</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" 
+                                         th:text="${attendanceReport.size()}">
+                                        0
+                                    </div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-people fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Date Selection Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">
+                        <i class="bi bi-calendar-date"></i> Select Date
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/admin/attendance/view}" method="get" class="row g-3 align-items-center">
+                        <div class="col-auto">
+                            <label for="date" class="col-form-label">Date:</label>
+                        </div>
+                        <div class="col-auto">
+                            <input type="date" class="form-control" id="date" name="date" 
+                                   th:value="${date}" required>
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> View
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Attendance List Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary" 
+                        th:text="'Attendance for ' + ${#temporals.format(date, 'EEEE, MMMM d, yyyy')}">
+                        Attendance List
+                    </h6>
+                    <a th:href="@{/admin/reports}" class="btn btn-sm btn-warning">
+                        <i class="bi bi-file-earmark-text"></i> Generate Report
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="attendanceTable">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:if="${#lists.isEmpty(attendanceReport)}">
+                                    <td colspan="4" class="text-center">No attendance records found for this date</td>
+                                </tr>
+                                <tr th:each="entry : ${attendanceReport}">
+                                    <td th:text="${entry.key.studentId}">STU001</td>
+                                    <td th:text="${entry.key.firstName + ' ' + entry.key.lastName}">John Doe</td>
+                                    <td>
+                                        <span th:if="${entry.value}" class="badge bg-success">Present</span>
+                                        <span th:unless="${entry.value}" class="badge bg-danger">Absent</span>
+                                    </td>
+                                    <td>
+                                        <a th:href="@{/admin/attendance/student/{id}(id=${entry.key.id})}" 
+                                           class="btn btn-sm btn-info">
+                                            <i class="bi bi-calendar-week"></i> View History
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Add DataTables initialization script -->
+    <script th:inline="none">
+        $(document).ready(function() {
+            $('#attendanceTable').DataTable({
+                order: [[ 1, 'asc' ]],
+                pageLength: 10,
+                language: {
+                    emptyTable: 'No attendance records found for this date',
+                    zeroRecords: 'No matching records found'
+                },
+                dom: 'Bfrtip',
+                buttons: [
+                    'copy', 'csv', 'excel', 'pdf', 'print'
+                ]
+            });
+        });
+    </script>
+</body>
+</html>

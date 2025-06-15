@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sidebar</title>
+</head>
+<body>
+    <div th:fragment="sidebar" class="sidebar">
+        <div class="position-sticky pt-3">
+            <ul class="nav flex-column">
+                <!-- Admin Menu -->
+                <div sec:authorize="hasRole('ADMIN')">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/admin/dashboard}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/admin/students}">
+                            <i class="bi bi-people"></i> Students
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/admin/attendance/mark}">
+                            <i class="bi bi-calendar-check"></i> Mark Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/admin/attendance/view}">
+                            <i class="bi bi-calendar-week"></i> View Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/admin/reports}">
+                            <i class="bi bi-file-earmark-text"></i> Reports
+                        </a>
+                    </li>
+                </div>
+                
+                <!-- Student Menu -->
+                <div sec:authorize="hasRole('STUDENT')">
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/student/dashboard}">
+                            <i class="bi bi-speedometer2"></i> Dashboard
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/student/attendance}">
+                            <i class="bi bi-calendar-check"></i> Attendance
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" th:href="@{/student/profile}">
+                            <i class="bi bi-person"></i> Profile
+                        </a>
+                    </li>
+                </div>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+

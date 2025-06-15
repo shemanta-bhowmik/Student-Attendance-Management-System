@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en" 
+      xmlns:th="http://www.thymeleaf.org" 
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Attendance Reports - Student Attendance System</title>
+    <!-- Add Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .progress-bar {
+            min-width: 2rem;
+            color: #fff;
+        }
+        .date-range-selector {
+            background: #fff;
+            padding: 1rem;
+            border-radius: 0.35rem;
+            box-shadow: 0 0.15rem 1.75rem 0 rgba(58, 59, 69, 0.15);
+        }
+        .print-hide {
+            display: block;
+        }
+        @media print {
+            .print-hide {
+                display: none !important;
+            }
+            .card {
+                border: none !important;
+                box-shadow: none !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div th:replace="~{layout/main :: layout(~{::section})}" th:with="title='Attendance Reports'">
+        <section>
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4 print-hide">
+                <h2 class="mb-0">Attendance Reports</h2>
+                <div class="text-end">
+                    <button class="btn btn-success me-2" id="exportBtn">
+                        <i class="bi bi-file-earmark-excel"></i> Export Excel
+                    </button>
+                    <button class="btn btn-primary" onclick="window.print()">
+                        <i class="bi bi-printer"></i> Print Report
+                    </button>
+                </div>
+            </div>
+
+            <!-- Date Range Selector -->
+            <div class="card shadow mb-4 print-hide">
+                <div class="card-body">
+                    <form class="row g-3 align-items-center" id="dateRangeForm">
+                        <div class="col-auto">
+                            <label for="startDate" class="col-form-label">From</label>
+                        </div>
+                        <div class="col-auto">
+                            <input type="date" class="form-control" id="startDate" name="startDate" 
+                                   th:value="${startDate}">
+                        </div>
+                        <div class="col-auto">
+                            <label for="endDate" class="col-form-label">To</label>
+                        </div>
+                        <div class="col-auto">
+                            <input type="date" class="form-control" id="endDate" name="endDate" 
+                                   th:value="${endDate}">
+                        </div>
+                        <div class="col-auto">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-search"></i> Generate Report
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Total Students</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${students.size()}">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-people fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Average Attendance</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" 
+                                        th:text="${#numbers.formatDecimal(averageAttendance, 1, 1) + '%'}">80.5%</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-graph-up fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Below 75% Attendance</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" 
+                                         th:text="${#lists.size(attendancePercentages.values().?[#this < 75])}">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-exclamation-triangle fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-xl-3 col-md-6 mb-4">
+                    <div class="card border-left-info shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                                        Days in Period</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" 
+                                         th:text="${daysBetween}">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-calendar-range fa-2x text-gray-300"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Chart -->
+            <div class="row mb-4">
+                <div class="col-xl-8">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                            <h6 class="m-0 font-weight-bold text-primary">Attendance Distribution</h6>
+                            <div class="btn-group print-hide">
+                                <button class="btn btn-sm btn-outline-primary active" data-chart-type="bar">Bar</button>
+                                <button class="btn btn-sm btn-outline-primary" data-chart-type="line">Line</button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="attendanceChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-xl-4">
+                    <div class="card shadow mb-4">
+                        <div class="card-header py-3">
+                            <h6 class="m-0 font-weight-bold text-primary">Attendance Categories</h6>
+                        </div>
+                        <div class="card-body">
+                            <canvas id="attendancePieChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Detailed Report Table -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Detailed Attendance Report</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered" id="reportTable">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Attendance Rate</th>
+                                    <th>Present Days</th>
+                                    <th>Absent Days</th>
+                                    <th>Status</th>
+                                    <th class="print-hide">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="student : ${students}">
+                                    <td th:text="${student.studentId}">STU001</td>
+                                    <td th:text="${student.firstName + ' ' + student.lastName}">John Doe</td>
+                                    <td>
+                                        <div class="progress">
+                                            <div class="progress-bar" role="progressbar" 
+                                                 th:classappend="${attendancePercentages.get(student) >= 75 ? 'bg-success' : 
+                                                                 (attendancePercentages.get(student) >= 50 ? 'bg-warning' : 'bg-danger')}"
+                                                 th:style="'width: ' + ${attendancePercentages.get(student)} + '%'"
+                                                 th:text="${#numbers.formatDecimal(attendancePercentages.get(student), 1, 1) + '%'}">
+                                                0%
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td th:text="${presentDays != null ? presentDays.get(student) : 0}">0</td>
+                                    <td th:text="${absentDays.get(student)}">0</td>
+                                    <td>
+                                        <span th:if="${attendancePercentages.get(student) >= 75}" class="badge bg-success">Good Standing</span>
+                                        <span th:if="${attendancePercentages.get(student) < 75 and attendancePercentages.get(student) >= 50}" 
+                                              class="badge bg-warning">Warning</span>
+                                        <span th:if="${attendancePercentages.get(student) < 50}" class="badge bg-danger">Critical</span>
+                                    </td>
+                                    <td class="print-hide">
+                                        <a th:href="@{/admin/attendance/student/{id}(id=${student.id})}" 
+                                           class="btn btn-sm btn-info">
+                                            <i class="bi bi-graph-up"></i> View Details
+                                        </a>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Initialize Charts -->
+    <script th:inline="none">
+        $(document).ready(function() {
+            // Initialize DataTable
+            $('#reportTable').DataTable({
+                order: [[ 2, 'desc' ]],
+                dom: 'Bfrtip',
+                buttons: [
+                    'copy', 'csv', 'excel', 'pdf', 'print'
+                ]
+            });
+
+            // Get attendance data
+            const students = /*[[${students}]]*/ [];
+            const attendancePercentages = /*[[${attendancePercentages}]]*/ {};
+            
+            // Initialize all charts
+            initializeCharts(students, attendancePercentages);
+            
+            // Chart type toggle
+            $('.btn-group button').click(function() {
+                $('.btn-group button').removeClass('active');
+                $(this).addClass('active');
+                updateChartType($(this).data('chart-type'), students, attendancePercentages);
+            });
+            
+            // Export button
+            $('#exportBtn').click(function() {
+                $('.dt-button.buttons-excel').click();
+            });
+        });
+        
+        // Store chart references for updating
+        let attendanceChart;
+        let pieChart;
+        
+        function initializeCharts(students, attendancePercentages) {
+            const labels = students.map(s => s.firstName + ' ' + s.lastName);
+            const data = students.map(s => attendancePercentages[s]);
+            
+            // Create bar chart
+            attendanceChart = new Chart(document.getElementById('attendanceChart'), {
+                type: 'bar',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Attendance Percentage',
+                        data: data,
+                        backgroundColor: 'rgba(78, 115, 223, 0.5)',
+                        borderColor: 'rgb(78, 115, 223)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+            
+            // Create pie chart
+            const categories = {
+                good: students.filter(s => attendancePercentages[s] >= 75).length,
+                warning: students.filter(s => attendancePercentages[s] < 75 && attendancePercentages[s] >= 50).length,
+                critical: students.filter(s => attendancePercentages[s] < 50).length
+            };
+
+            pieChart = new Chart(document.getElementById('attendancePieChart'), {
+                type: 'pie',
+                data: {
+                    labels: ['Good Standing', 'Warning', 'Critical'],
+                    datasets: [{
+                        data: [categories.good, categories.warning, categories.critical],
+                        backgroundColor: ['#1cc88a', '#f6c23e', '#e74a3b']
+                    }]
+                },
+                options: {
+                    responsive: true
+                }
+            });
+        }
+        
+        function updateChartType(type, students, attendancePercentages) {
+            if (!attendanceChart) return;
+            
+            attendanceChart.destroy();
+            
+            const chartCanvas = document.getElementById('attendanceChart');
+            const labels = students.map(s => s.firstName + ' ' + s.lastName);
+            const data = students.map(s => attendancePercentages[s]);
+            
+            attendanceChart = new Chart(chartCanvas, {
+                type: type,
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Attendance Percentage',
+                        data: data,
+                        backgroundColor: 'rgba(78, 115, 223, 0.5)',
+                        borderColor: 'rgb(78, 115, 223)',
+                        borderWidth: type === 'line' ? 2 : 1,
+                        fill: type === 'line' ? false : true,
+                        tension: type === 'line' ? 0.1 : 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
+

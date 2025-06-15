@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Admin Dashboard - Student Attendance System</title>
+</head>
+<body>
+    <div th:replace="~{layout/main :: layout(~{::section})}">
+        <section>
+        <h2 class="mb-4">Admin Dashboard</h2>
+        
+        <div class="row">
+            <!-- Total Students Card -->
+            <div class="col-md-4 mb-4">
+                <div class="card border-left-primary shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                    Total Students</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${totalStudents}">0</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-people fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Today's Date Card -->
+            <div class="col-md-4 mb-4">
+                <div class="card border-left-success shadow h-100 py-2">
+                    <div class="card-body">
+                        <div class="row no-gutters align-items-center">
+                            <div class="col mr-2">
+                                <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                    Today's Date</div>
+                                <div class="h5 mb-0 font-weight-bold text-gray-800" 
+                                     th:text="${#temporals.format(today, 'EEEE, MMMM d, yyyy')}">Date</div>
+                            </div>
+                            <div class="col-auto">
+                                <i class="bi bi-calendar-date fa-2x text-gray-300"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Quick Links Section -->
+        <div class="row mt-4">
+            <div class="col-12">
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Quick Links</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <!-- Manage Students Link -->
+                                <div class="col-md-3 mb-3">
+                                    <a th:href="@{/admin/students}" class="btn btn-primary btn-block d-block">
+                                        <i class="bi bi-people"></i> Manage Students
+                                    </a>
+                                </div>
+                                
+                                <!-- Mark Attendance Link -->
+                                <div class="col-md-3 mb-3">
+                                    <a th:href="@{/admin/attendance/mark}" class="btn btn-success btn-block d-block">
+                                        <i class="bi bi-calendar-check"></i> Mark Attendance
+                                    </a>
+                                </div>
+                                
+                                <!-- View Attendance Link -->
+                                <div class="col-md-3 mb-3">
+                                    <a th:href="@{/admin/attendance/view}" class="btn btn-info btn-block d-block">
+                                        <i class="bi bi-calendar-week"></i> View Attendance
+                                    </a>
+                                </div>
+                                
+                                <!-- Reports Link -->
+                                <div class="col-md-3 mb-3">
+                                    <a th:href="@{/admin/reports}" class="btn btn-warning btn-block d-block">
+                                        <i class="bi bi-file-earmark-text"></i> Reports
+                                    </a>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </section>
+    </div>
+</body>
+</html>
+

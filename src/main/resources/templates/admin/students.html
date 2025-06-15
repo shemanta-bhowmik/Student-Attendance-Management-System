@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Manage Students - Student Attendance System</title>
+</head>
+<body>
+    <div th:replace="~{layout/main :: layout(~{::section})}">
+        <section>
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2 class="mb-0">Manage Students</h2>
+                <a th:href="@{/admin/students/add}" class="btn btn-primary">
+                    <i class="bi bi-person-plus"></i> Add New Student
+                </a>
+            </div>
+
+            <!-- Statistics Cards -->
+            <div class="row mb-4">
+                <div class="col-md-4">
+                    <div class="card border-left-primary shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                                        Total Students</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${students.size()}">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-people fs-1 text-primary opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card border-left-success shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                                        Active Students</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${activeStudentsCount}">0</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-person-check fs-1 text-success opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-4">
+                    <div class="card border-left-warning shadow h-100 py-2">
+                        <div class="card-body">
+                            <div class="row no-gutters align-items-center">
+                                <div class="col mr-2">
+                                    <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                                        Avg. Attendance Rate</div>
+                                    <div class="h5 mb-0 font-weight-bold text-gray-800" th:text="${#numbers.formatDecimal(attendanceRate != null ? attendanceRate : 0, 1, 2)} + '%'">0.00%</div>
+                                </div>
+                                <div class="col-auto">
+                                    <i class="bi bi-graph-up fs-1 text-warning opacity-50"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Students List Card -->
+            <div class="card shadow mb-4">
+                <div class="card-header py-3 d-flex justify-content-between align-items-center">
+                    <h6 class="m-0 font-weight-bold text-primary">Students List</h6>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="exportCSV">
+                            <i class="bi bi-file-earmark-spreadsheet"></i> Export CSV
+                        </button>
+                        <button type="button" class="btn btn-sm btn-outline-secondary" id="printList">
+                            <i class="bi bi-printer"></i> Print
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-hover" id="studentsTable" width="100%" cellspacing="0">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Name</th>
+                                    <th>Email</th>
+                                    <th>Student ID</th>
+                                    <th>Status</th>
+                                    <th>Attendance</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr th:each="student : ${students}">
+                                    <td th:text="${student.id}">1</td>
+                                    <td th:text="${student.firstName + ' ' + student.lastName}">John Doe</td>
+                                    <td th:text="${student.email}">john@example.com</td>
+                                    <td th:text="${student.studentId}">STU001</td>
+                                    <td>
+                                        <span th:if="${student.user.active}" class="badge bg-success">Active</span>
+                                        <span th:unless="${student.user.active}" class="badge bg-danger">Inactive</span>
+                                    </td>
+                                    <td>
+                                        <!-- Attendance progress bar -->
+                                        <div class="progress" style="height: 20px;">
+                                            <div th:with="attendancePercentage=${studentAttendance.containsKey(student.id) ? studentAttendance.get(student.id) : 0}"
+                                                 th:class="${'progress-bar ' + (attendancePercentage >= 75 ? 'bg-success' : (attendancePercentage >= 50 ? 'bg-warning' : 'bg-danger'))}"
+                                                 th:style="'width: ' + ${attendancePercentage} + '%'" 
+                                                 th:text="${#numbers.formatDecimal(attendancePercentage, 1, 1) + '%'}"
+                                                 th:aria-valuenow="${attendancePercentage}" 
+                                                 aria-valuemin="0" 
+                                                 aria-valuemax="100">75%</div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a th:href="@{/admin/students/edit/{id}(id=${student.id})}" 
+                                               class="btn btn-sm btn-primary"
+                                               data-bs-toggle="tooltip" 
+                                               data-bs-placement="top" 
+                                               title="Edit Student">
+                                                <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a th:href="@{/admin/attendance/student/{id}(id=${student.id})}" 
+                                               class="btn btn-sm btn-info"
+                                               data-bs-toggle="tooltip" 
+                                               data-bs-placement="top" 
+                                               title="View Attendance History">
+                                                <i class="bi bi-calendar-check"></i>
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-danger"
+                                                    data-bs-toggle="tooltip" 
+                                                    data-bs-placement="top" 
+                                                    title="Delete Student"
+                                                    th:onclick="'if(confirm(\'Are you sure you want to delete this student?\')) { window.location.href=\'' + @{/admin/students/delete/{id}(id=${student.id})} + '\'; }'">
+                                                <i class="bi bi-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Add DataTables and Export scripts -->
+    <script th:inline="none">
+        $(document).ready(function() {
+            // Initialize tooltips
+            var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'))
+            var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+                return new bootstrap.Tooltip(tooltipTriggerEl)
+            });
+            
+            // Initialize DataTable
+            var table = $('#studentsTable').DataTable({
+                "order": [[0, "desc"]],
+                "pageLength": 10,
+                "lengthMenu": [[10, 25, 50, -1], [10, 25, 50, "All"]],
+                "responsive": true,
+                "language": {
+                    "search": "Search students:",
+                    "lengthMenu": "Show _MENU_ students per page",
+                    "info": "Showing _START_ to _END_ of _TOTAL_ students"
+                }
+            });
+            
+            // Export to CSV functionality
+            $('#exportCSV').on('click', function() {
+                // Create CSV content
+                let csv = [];
+                let rows = document.querySelectorAll('#studentsTable tr');
+                
+                for (let i = 0; i < rows.length; i++) {
+                    let row = [], cols = rows[i].querySelectorAll('td, th');
+                    
+                    for (let j = 0; j < cols.length - 1; j++) { // Skip the actions column
+                        // Get text content, remove any HTML and extra spaces
+                        let text = cols[j].innerText.replace(/(\r\n|\n|\r)/gm, ' ').replace(/\s+/g, ' ').trim();
+                        row.push('"' + text + '"');
+                    }
+                    csv.push(row.join(','));
+                }
+                
+                // Download CSV file
+                let csvContent = csv.join('\n');
+                let blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                let url = URL.createObjectURL(blob);
+                let link = document.createElement('a');
+                link.setAttribute('href', url);
+                link.setAttribute('download', 'students_list.csv');
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            });
+            
+            // Print functionality
+            $('#printList').on('click', function() {
+                window.print();
+            });
+        });
+    </script>
+</body>
+</html>

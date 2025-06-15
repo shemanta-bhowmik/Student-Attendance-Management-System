@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <title>Student Dashboard - Student Attendance System</title>
+</head>
+<body>
+    <div th:replace="~{layout/main :: layout(~{::section})}">
+        <section>
+        <h2 class="mb-4">Student Dashboard</h2>
+        
+        <div class="row">
+            <div class="col-md-8">
+                <!-- Student Info Card -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Student Information</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h5 th:text="${student.firstName + ' ' + student.lastName}">John Doe</h5>
+                                <p><strong>Student ID:</strong> <span th:text="${student.studentId}">S12345</span></p>
+                                <p><strong>Email:</strong> <span th:text="${student.email}">john@example.com</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h5 class="card-title">Attendance Percentage</h5>
+                                        <div class="text-center">
+                                            <h1 th:text="${#numbers.formatDecimal(attendancePercentage, 1, 2) + '%'}">
+                                                85.00%
+                                            </h1>
+                                            <div class="progress">
+                                                <div class="progress-bar" role="progressbar" 
+                                                     th:style="'width: ' + ${attendancePercentage} + '%'" 
+                                                     th:aria-valuenow="${attendancePercentage}" 
+                                                     aria-valuemin="0" aria-valuemax="100">
+                                                </div>
+                                            </div>
+                                            <div class="mt-2">
+                                                <span th:if="${attendancePercentage >= 75}" class="badge bg-success">Good Standing</span>
+                                                <span th:if="${attendancePercentage < 75 && attendancePercentage >= 50}" 
+                                                      class="badge bg-warning">Warning</span>
+                                                <span th:if="${attendancePercentage < 50}" class="badge bg-danger">Critical</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Today's Status -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Today's Status</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <p><strong>Date:</strong> <span th:text="${#temporals.format(today, 'EEEE, MMMM d, yyyy')}">
+                                    Monday, January 1, 2025
+                                </span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <!-- This is a placeholder. The actual status would come from the controller -->
+                                <p><strong>Status:</strong> 
+                                    <span class="badge bg-success">Present</span>
+                                    <!-- <span class="badge bg-danger">Absent</span> -->
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4">
+                <!-- Quick Links -->
+                <div class="card shadow mb-4">
+                    <div class="card-header py-3">
+                        <h6 class="m-0 font-weight-bold text-primary">Quick Links</h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <a th:href="@{/student/attendance}" class="btn btn-primary btn-block">
+                                <i class="bi bi-calendar-check"></i> View Attendance History
+                            </a>
+                            <a th:href="@{/student/profile}" class="btn btn-info btn-block">
+                                <i class="bi bi-person"></i> View Profile
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </section>
+    </div>
+</body>
+</html>
+
